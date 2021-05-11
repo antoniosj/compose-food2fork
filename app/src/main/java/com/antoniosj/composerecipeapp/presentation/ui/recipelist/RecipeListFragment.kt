@@ -32,10 +32,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.findNavController
 import com.antoniosj.composerecipeapp.R
-import com.antoniosj.composerecipeapp.presentation.components.CircularIndeterminateProgressBar
-import com.antoniosj.composerecipeapp.presentation.components.FoodCategoryChip
-import com.antoniosj.composerecipeapp.presentation.components.RecipeCard
-import com.antoniosj.composerecipeapp.presentation.components.SearchAppBar
+import com.antoniosj.composerecipeapp.presentation.components.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -66,7 +63,7 @@ class RecipeListFragment: Fragment() {
 
                 val loading = viewModel.loading.value
 
-                Column() {
+                Column {
 
                     SearchAppBar(
                         query = query,
@@ -78,6 +75,7 @@ class RecipeListFragment: Fragment() {
                         onChangeCategoryScrollPosition = viewModel::onChangeCategoryScrollPosition
                     )
 
+                    //PulsingDemo() // Testing my component
                     Box(
                         modifier = Modifier.fillMaxSize()
                     ){
