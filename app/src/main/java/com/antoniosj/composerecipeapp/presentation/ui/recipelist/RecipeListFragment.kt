@@ -35,6 +35,7 @@ import com.antoniosj.composerecipeapp.R
 import com.antoniosj.composerecipeapp.presentation.components.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import com.antoniosj.composerecipeapp.presentation.components.HeartAnimationDefinition.HeartButtonState.*
 
 @AndroidEntryPoint
 class RecipeListFragment: Fragment() {
@@ -74,20 +75,25 @@ class RecipeListFragment: Fragment() {
                         onSelectedCategoryChanged = viewModel::onSelectedCategoryChanged,
                         onChangeCategoryScrollPosition = viewModel::onChangeCategoryScrollPosition
                     )
-
+                    val state = remember { mutableStateOf(HeartAnimationDef.HeartBtnState.IDLEE) }
+                    HeartButton(modifier = Modifier,
+                        buttonState = state,
+                        onToggle = {
+                            state.value = if(state.value == HeartAnimationDef.HeartBtnState.IDLEE) HeartAnimationDef.HeartBtnState.ACTIVEE else HeartAnimationDef.HeartBtnState.IDLEE
+                        },)
                     //PulsingDemo() // Testing my component
-                    Box(
-                        modifier = Modifier.fillMaxSize()
-                    ){
-                        LazyColumn {
-                            itemsIndexed(items = recipes) { index, recipe ->
-                                RecipeCard(
-                                    recipe = recipe,
-                                    onClick = {})
-                            }
-                        }
-                        CircularIndeterminateProgressBar(isDisplayed = loading)
-                    }
+//                    Box(
+//                        modifier = Modifier.fillMaxSize()
+//                    ){
+//                        LazyColumn {
+//                            itemsIndexed(items = recipes) { index, recipe ->
+//                                RecipeCard(
+//                                    recipe = recipe,
+//                                    onClick = {})
+//                            }
+//                        }
+//                        CircularIndeterminateProgressBar(isDisplayed = loading)
+//                    }
                 }
             }
         }
