@@ -5,6 +5,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,37 +59,39 @@ class RecipeListFragment: Fragment() {
                         onChangeCategoryScrollPosition = viewModel::onChangeCategoryScrollPosition
                     )
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-
-                        val state = remember { mutableStateOf(IDLE) }
-
-                        HeartButton(modifier = Modifier,
-                            buttonState = state,
-                            onToggle = {
-                                state.value = if(state.value == IDLE) ACTIVE else IDLE
-                            }
-                        )
-                    }
-                    
-
-                    //PulsingDemo() // Testing my component
-//                    Box(
-//                        modifier = Modifier.fillMaxSize()
-//                    ){
-//                        LazyColumn {
-//                            itemsIndexed(items = recipes) { index, recipe ->
-//                                RecipeCard(
-//                                    recipe = recipe,
-//                                    onClick = {})
+//                    Row(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(200.dp),
+//                        horizontalArrangement = Arrangement.Center
+//                    ) {
+//
+//                        val state = remember { mutableStateOf(IDLE) }
+//
+//                        HeartButton(modifier = Modifier,
+//                            buttonState = state,
+//                            onToggle = {
+//                                state.value = if(state.value == IDLE) ACTIVE else IDLE
 //                            }
-//                        }
-//                        CircularIndeterminateProgressBar(isDisplayed = loading)
+//                        )
 //                    }
+                    //PulsingDemo() // Testing my component
+                    Box(
+                        modifier = Modifier.fillMaxSize()
+                    ){
+                        if (loading)  {
+                            ShimmerRecipeCardItem(imageHeight = 250.dp, padding = 8.dp)
+                        } else {
+                            LazyColumn {
+                                itemsIndexed(items = recipes) { index, recipe ->
+                                    RecipeCard(
+                                        recipe = recipe,
+                                        onClick = {})
+                                }
+                            }
+                        }
+                        CircularIndeterminateProgressBar(isDisplayed = loading)
+                    }
                 }
             }
         }
