@@ -3,6 +3,7 @@ package com.antoniosj.composerecipeapp.presentation
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewTreeLifecycleOwner
 import com.antoniosj.composerecipeapp.R
 import dagger.hilt.android.AndroidEntryPoint
@@ -16,6 +17,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // theming in compose for status bar color
+        window.statusBarColor = ContextCompat.getColor(this, R.color.status_bar_color)
 
         // interop with jetpack
         ViewTreeLifecycleOwner.set(window.decorView, this)
