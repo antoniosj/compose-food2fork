@@ -33,6 +33,8 @@ import com.antoniosj.composerecipeapp.presentation.components.*
 import dagger.hilt.android.AndroidEntryPoint
 import com.antoniosj.composerecipeapp.presentation.components.HeartAnimationDefinition.HeartButtonState.*
 import com.antoniosj.composerecipeapp.presentation.theme.AppTheme
+import com.antoniosj.composerecipeapp.presentation.ui.recipelist.RecipeListEvent.NewSearchEvent
+import com.antoniosj.composerecipeapp.presentation.ui.recipelist.RecipeListEvent.NextPageEvent
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -86,7 +88,7 @@ class RecipeListFragment : Fragment() {
                                             )
                                         }
                                     } else {
-                                        viewModel.newSearch()
+                                        viewModel.onTriggerEvent(NewSearchEvent)
                                     }
                                 },
                                 scrollPosition = viewModel.categoryScrollPosition,
@@ -121,7 +123,7 @@ class RecipeListFragment : Fragment() {
                                     itemsIndexed(items = recipes) { index, recipe ->
                                         viewModel.onChangeRecipeScrollPosition(index)
                                         if ((index + 1) >= (page * PAGE_SIZE) && !loading) {
-                                            viewModel.nextPage()
+                                            viewModel.onTriggerEvent(NextPageEvent)
                                         }
                                         RecipeCard(
                                             recipe = recipe,

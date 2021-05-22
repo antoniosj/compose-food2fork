@@ -1,5 +1,6 @@
 package com.antoniosj.composerecipeapp.presentation.ui.recipelist
 
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.hilt.lifecycle.ViewModelInject
@@ -8,6 +9,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.antoniosj.composerecipeapp.domain.model.Recipe
+import com.antoniosj.composerecipeapp.presentation.ui.recipelist.RecipeListEvent.NewSearchEvent
+import com.antoniosj.composerecipeapp.presentation.ui.recipelist.RecipeListEvent.NextPageEvent
 import com.antoniosj.composerecipeapp.repository.RecipeRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -19,7 +22,7 @@ class RecipeListViewModel @ViewModelInject constructor(
     private val randomString: String,
     private val repository: RecipeRepository,
     private @Named("auth_token") val token: String
-): ViewModel() {
+) : ViewModel() {
 
 //    private val _recipes: MutableLiveData<List<Recipe>> = MutableLiveData()
 //
@@ -37,65 +40,86 @@ class RecipeListViewModel @ViewModelInject constructor(
     var recipeListScrollPosition = 0
 
     init {
-        newSearch()
+        onTriggerEvent(NewSearchEvent)
     }
 
-    fun newSearch() {
+    fun onTriggerEvent(event: RecipeListEvent) {
         viewModelScope.launch {
-
-            loading.value = true
-
-            resetSearchState()
-
-            delay(1000)
-
-            val result = repository.search(
-                token = token,
-                page = 1,
-                query = query.value
-            )
-            recipes.value = result
-
-            loading.value = false
-        }
-    }
-
-
-    fun nextPage(){
-        viewModelScope.launch {
-            // prevent duplicate event due to recompose happening to quickly
-            if((recipeListScrollPosition + 1) >= (page.value * PAGE_SIZE) ){
-                loading.value = true
-                incrementPage()
-
-
-                // just to show pagination, api is fast
-                delay(1000)
-
-                if(page.value > 1){
-                    val result = repository.search(token = token, page = page.value, query = query.value )
-
-                    appendRecipes(result)
+            try {
+                when (event) {
+                    is NewSearchEvent -> {
+                        newSearch()
+                    }
+                    is NextPageEvent -> {
+                        nextPage()
+                    }
                 }
-                loading.value = false
+            } catch (e: Exception) {
+                Log.e("ASJ", "launchJob: Exception: ${e}, ${e.cause}")
+                e.printStackTrace()
+            } finally {
+                Log.d("ASJ", "launchJob: finally called.")
             }
         }
+    }
+
+    private suspend fun newSearch() {
+
+
+        loading.value = true
+
+        resetSearchState()
+
+        delay(1000)
+
+        val result = repository.search(
+            token = token,
+            page = 1,
+            query = query.value
+        )
+        recipes.value = result
+
+        loading.value = false
+
+    }
+
+
+    private suspend fun nextPage() {
+
+        // prevent duplicate event due to recompose happening to quickly
+        if ((recipeListScrollPosition + 1) >= (page.value * PAGE_SIZE)) {
+            loading.value = true
+            incrementPage()
+
+
+            // just to show pagination, api is fast
+            delay(1000)
+
+            if (page.value > 1) {
+                val result =
+                    repository.search(token = token, page = page.value, query = query.value)
+
+                appendRecipes(result)
+            }
+            loading.value = false
+        }
+
     }
 
     /**
      * Append new recipes to the current list of recipes
      */
-    private fun appendRecipes(recipes: List<Recipe>){
+    private fun appendRecipes(recipes: List<Recipe>) {
         val current = ArrayList(this.recipes.value)
         current.addAll(recipes)
         this.recipes.value = current
     }
 
-    private fun incrementPage(){
+    private fun incrementPage() {
         page.value = page.value + 1
     }
 
-    fun onChangeRecipeScrollPosition(position: Int){
+    fun onChangeRecipeScrollPosition(position: Int) {
         recipeListScrollPosition = position
     }
 
