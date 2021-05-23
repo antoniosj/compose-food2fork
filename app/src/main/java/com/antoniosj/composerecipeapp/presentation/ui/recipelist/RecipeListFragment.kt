@@ -4,24 +4,45 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.BrokenImage
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import com.antoniosj.composerecipeapp.presentation.BaseApplication
 import com.antoniosj.composerecipeapp.presentation.components.*
 import dagger.hilt.android.AndroidEntryPoint
 import com.antoniosj.composerecipeapp.presentation.components.HeartAnimationDefinition.HeartButtonState.*
+import com.antoniosj.composerecipeapp.presentation.theme.AppTheme
+import com.antoniosj.composerecipeapp.presentation.ui.recipelist.RecipeListEvent.NewSearchEvent
+import com.antoniosj.composerecipeapp.presentation.ui.recipelist.RecipeListEvent.NextPageEvent
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
-class RecipeListFragment: Fragment() {
+class RecipeListFragment : Fragment() {
+
+    @Inject
+    lateinit var application: BaseApplication
 
     private val viewModel: RecipeListViewModel by viewModels()
 
@@ -35,62 +56,90 @@ class RecipeListFragment: Fragment() {
         return ComposeView(requireContext()).apply {
             setContent {
 
-                val recipes = viewModel.recipes.value
+                AppTheme(darkTheme = application.isDark.value) {
+                    val recipes = viewModel.recipes.value
 
-                // remember = gives a composable function memory
-                // precisa pra ele lembrar o valor :P
-                //val query = remember { mutableStateOf("beef")}
-                // trick pra atualizar textview compose
-                val query = viewModel.query.value
+                    // remember = gives a composable function memory
+                    // precisa pra ele lembrar o valor :P
+                    //val query = remember { mutableStateOf("beef")}
+                    // trick pra atualizar textview compose
+                    val query = viewModel.query.value
 
-                val selectedCategory = viewModel.selectedCategory.value
+                    val selectedCategory = viewModel.selectedCategory.value
 
-                val loading = viewModel.loading.value
+                    val loading = viewModel.loading.value
 
-                Column {
+                    val scaffoldState = rememberScaffoldState()
 
-                    SearchAppBar(
-                        query = query,
-                        onQueryChanged = viewModel::onQueryChanged,
-                        onExecuteSearch = viewModel::newSearch,
-                        scrollPosition = viewModel.categoryScrollPosition,
-                        selectedCategory = selectedCategory,
-                        onSelectedCategoryChanged = viewModel::onSelectedCategoryChanged,
-                        onChangeCategoryScrollPosition = viewModel::onChangeCategoryScrollPosition
-                    )
+                    val page = viewModel.page.value
 
-//                    Row(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .height(200.dp),
-//                        horizontalArrangement = Arrangement.Center
-//                    ) {
-//
-//                        val state = remember { mutableStateOf(IDLE) }
-//
-//                        HeartButton(modifier = Modifier,
-//                            buttonState = state,
-//                            onToggle = {
-//                                state.value = if(state.value == IDLE) ACTIVE else IDLE
-//                            }
-//                        )
-//                    }
-                    //PulsingDemo() // Testing my component
-                    Box(
-                        modifier = Modifier.fillMaxSize()
-                    ){
-                        if (loading)  {
-                            ShimmerRecipeCardItem(imageHeight = 250.dp, padding = 8.dp)
-                        } else {
-                            LazyColumn {
-                                itemsIndexed(items = recipes) { index, recipe ->
-                                    RecipeCard(
-                                        recipe = recipe,
-                                        onClick = {})
+                    Scaffold(
+                        topBar = {
+                            SearchAppBar(
+                                query = query,
+                                onQueryChanged = viewModel::onQueryChanged,
+                                onExecuteSearch = {
+                                    if (viewModel.selectedCategory.value?.value == "Milk") {
+                                        lifecycleScope.launch {
+                                            scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+                                            scaffoldState.snackbarHostState.showSnackbar(
+                                                message = "Invalid category: MILK",
+                                                actionLabel = "Hide"
+                                            )
+                                        }
+                                    } else {
+                                        viewModel.onTriggerEvent(NewSearchEvent)
+                                    }
+                                },
+                                scrollPosition = viewModel.categoryScrollPosition,
+                                selectedCategory = selectedCategory,
+                                onSelectedCategoryChanged = viewModel::onSelectedCategoryChanged,
+                                onChangeCategoryScrollPosition = viewModel::onChangeCategoryScrollPosition,
+                                onToggleTheme = {
+                                    application.toggleLightTheme()
+                                }
+                            )
+                        },
+                        bottomBar = {
+                            //MyBottomBar()
+                        },
+                        drawerContent = {
+                            //MyDrawer()
+                        },
+                        scaffoldState = scaffoldState,
+                        snackbarHost = {
+                            scaffoldState.snackbarHostState
+                        }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colors.background)
+                        ) {
+                            if (loading && recipes.isEmpty()) {
+                                ShimmerRecipeCardItem(imageHeight = 250.dp, padding = 8.dp)
+                            } else {
+                                LazyColumn {
+                                    itemsIndexed(items = recipes) { index, recipe ->
+                                        viewModel.onChangeRecipeScrollPosition(index)
+                                        if ((index + 1) >= (page * PAGE_SIZE) && !loading) {
+                                            viewModel.onTriggerEvent(NextPageEvent)
+                                        }
+                                        RecipeCard(
+                                            recipe = recipe,
+                                            onClick = {})
+                                    }
                                 }
                             }
+                            CircularIndeterminateProgressBar(isDisplayed = loading)
+                            DefaultSnackbar(
+                                snackbarHostState = scaffoldState.snackbarHostState,
+                                modifier = Modifier.align(Alignment.BottomCenter),
+                                onDismiss = {
+                                    scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+                                }
+                            )
                         }
-                        CircularIndeterminateProgressBar(isDisplayed = loading)
                     }
                 }
             }
