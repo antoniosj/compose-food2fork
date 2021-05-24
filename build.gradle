@@ -13,6 +13,9 @@ buildscript {
 
         def hilt = "2.28-alpha"
         classpath "com.google.dagger:hilt-android-gradle-plugin:$hilt"
+
+        def nav_version = "2.3.5"
+        classpath("androidx.navigation:navigation-safe-args-gradle-plugin:$nav_version")
     }
 }
 

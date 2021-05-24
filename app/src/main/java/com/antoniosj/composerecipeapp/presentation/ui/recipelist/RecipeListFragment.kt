@@ -28,6 +28,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.findNavController
 import com.antoniosj.composerecipeapp.presentation.BaseApplication
 import com.antoniosj.composerecipeapp.presentation.components.*
 import dagger.hilt.android.AndroidEntryPoint
@@ -35,6 +36,7 @@ import com.antoniosj.composerecipeapp.presentation.components.HeartAnimationDefi
 import com.antoniosj.composerecipeapp.presentation.theme.AppTheme
 import com.antoniosj.composerecipeapp.presentation.ui.recipelist.RecipeListEvent.NewSearchEvent
 import com.antoniosj.composerecipeapp.presentation.ui.recipelist.RecipeListEvent.NextPageEvent
+import com.antoniosj.composerecipeapp.utils.SnackbarController
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -46,6 +48,10 @@ class RecipeListFragment : Fragment() {
 
     private val viewModel: RecipeListViewModel by viewModels()
 
+    @ExperimentalMaterialApi
+    private val snackbarController = SnackbarController(lifecycleScope)
+
+    @ExperimentalMaterialApi
     @ExperimentalComposeUiApi
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -111,35 +117,18 @@ class RecipeListFragment : Fragment() {
                             scaffoldState.snackbarHostState
                         }
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(MaterialTheme.colors.background)
-                        ) {
-                            if (loading && recipes.isEmpty()) {
-                                ShimmerRecipeCardItem(imageHeight = 250.dp, padding = 8.dp)
-                            } else {
-                                LazyColumn {
-                                    itemsIndexed(items = recipes) { index, recipe ->
-                                        viewModel.onChangeRecipeScrollPosition(index)
-                                        if ((index + 1) >= (page * PAGE_SIZE) && !loading) {
-                                            viewModel.onTriggerEvent(NextPageEvent)
-                                        }
-                                        RecipeCard(
-                                            recipe = recipe,
-                                            onClick = {})
-                                    }
-                                }
-                            }
-                            CircularIndeterminateProgressBar(isDisplayed = loading)
-                            DefaultSnackbar(
-                                snackbarHostState = scaffoldState.snackbarHostState,
-                                modifier = Modifier.align(Alignment.BottomCenter),
-                                onDismiss = {
-                                    scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-                                }
-                            )
-                        }
+                        RecipeList(
+                            loading = loading,
+                            recipes = recipes,
+                            onChangeRecipeScrollPosition = viewModel::onChangeRecipeScrollPosition,
+                            page = page,
+                            onTriggerEvent = {
+                                             viewModel.onTriggerEvent(NextPageEvent)
+                            },
+                            navController = findNavController(),
+                            scaffoldState = scaffoldState ,
+                            snackbarController = snackbarController
+                        )
                     }
                 }
             }

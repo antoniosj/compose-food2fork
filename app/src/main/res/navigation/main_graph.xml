@@ -9,11 +9,15 @@
         android:name="com.antoniosj.composerecipeapp.presentation.ui.recipelist.RecipeListFragment"
         android:label="RecipeListFragment" >
         <action
-            android:id="@+id/viewRecipe"
+            android:id="@+id/actionToViewRecipe"
             app:destination="@id/recipeFragment" />
     </fragment>
     <fragment
         android:id="@+id/recipeFragment"
         android:name="com.antoniosj.composerecipeapp.presentation.ui.recipe.RecipeFragment"
-        android:label="RecipeFragment" />
+        android:label="RecipeFragment" >
+        <argument
+            android:name="recipeId"
+            app:argType="integer" />
+    </fragment>
 </navigation>
