@@ -25,9 +25,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.antoniosj.composerecipeapp.presentation.BaseApplication
-import com.antoniosj.composerecipeapp.presentation.components.CircularIndeterminateProgressBar
-import com.antoniosj.composerecipeapp.presentation.components.DefaultSnackbar
-import com.antoniosj.composerecipeapp.presentation.components.RecipeView
+import com.antoniosj.composerecipeapp.presentation.components.*
 import com.antoniosj.composerecipeapp.presentation.theme.AppTheme
 import com.antoniosj.composerecipeapp.utils.SnackbarController
 import dagger.hilt.android.AndroidEntryPoint
@@ -84,23 +82,26 @@ class RecipeFragment: Fragment() {
                         Box (
                             modifier = Modifier.fillMaxSize()
                         ){
-                            //if (loading && recipe == null) Text(text = "LOADING...")
-                            recipe?.let {
-                                if(it.id == 1) { // create a fake error
-                                    snackbarController.getScope().launch {
-                                        snackbarController.showSnackbar(
-                                            scaffoldState = scaffoldState,
-                                            message = "An error occurred with this recipe",
-                                            actionLabel = "Ok"
+                            if (loading && recipe == null) LoadingRecipeShimmer(imageHeight = IMAGE_HEIGHT.dp)
+                            else {
+                                recipe?.let {
+                                    if(it.id == 1) { // create a fake error
+                                        snackbarController.getScope().launch {
+                                            snackbarController.showSnackbar(
+                                                scaffoldState = scaffoldState,
+                                                message = "An error occurred with this recipe",
+                                                actionLabel = "Ok"
+                                            )
+                                        }
+                                    }
+                                    else{
+                                        RecipeView(
+                                            recipe = it,
                                         )
                                     }
                                 }
-                                else{
-                                    RecipeView(
-                                        recipe = it,
-                                    )
-                                }
                             }
+
                             CircularIndeterminateProgressBar(isDisplayed = loading)
                             DefaultSnackbar(
                                 snackbarHostState = scaffoldState.snackbarHostState,
